@@ -1,4 +1,4 @@
-name: Check C# Syntax
+name: .NET Framework Build and Syntax Check
 
 on:
   push:
@@ -9,27 +9,26 @@ on:
       - new_vetochkaa
 
 jobs:
-  syntax-check:
-    runs-on: windows-latest  # Используем Windows, так как это .NET Framework проект
-
+  build:
+    runs-on: windows-latest
     steps:
-      # Клонируем код из репозитория
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      # Устанавливаем .NET Framework
-      - name: Set up .NET Framework 4.7.2
-        uses: actions/setup-dotnet@v2
-        with:
-          dotnet-version: '4.7.2'  # Устанавливаем .NET Framework 4.7.2
+    - name: Install .NET Framework Developer Pack
+      run: choco install netfx-4.7.2-devpack -y
 
-      # Восстановление NuGet зависимостей
-      - name: Restore NuGet packages
-        run: |
-          nuget restore YourSolution.sln  # Восстанавливаем зависимости через NuGet
+    - name: Set up MSBuild
+      uses: microsoft/setup-msbuild@v1
 
-      # Проверка синтаксиса и форматирования с помощью dotnet-format
-      - name: Check syntax with dotnet format
-        run: |
-          dotnet tool install --global dotnet-format  # Устанавливаем инструмент dotnet-format
-          dotnet format --check  # Проверяем код на соответствие стандартам (без изменений)
+    - name: Build with MSBuild
+      run: msbuild /p:Configuration=Release
+
+    - name: Install XAML Styler
+      run: dotnet tool install -g XamlStyler.Console
+
+    - name: Format XAML files
+      run: xstyler -d ./ 
+
+    - name: Check for changes after formatting
+      run: git diff --exit-code
