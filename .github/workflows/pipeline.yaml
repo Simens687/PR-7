@@ -1,0 +1,35 @@
+name: Check C# Syntax
+
+on:
+  push:
+    branches:
+      - new_vetochka
+  pull_request:
+    branches:
+      - new_vetochka
+
+jobs:
+  syntax-check:
+    runs-on: windows-latest  # Используем Windows, так как это .NET Framework проект
+
+    steps:
+      # Клонируем код из репозитория
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Устанавливаем .NET Framework
+      - name: Set up .NET Framework 4.7.2
+        uses: actions/setup-dotnet@v2
+        with:
+          dotnet-version: '4.7.2'  # Устанавливаем .NET Framework 4.7.2
+
+      # Восстановление NuGet зависимостей
+      - name: Restore NuGet packages
+        run: |
+          nuget restore YourSolution.sln  # Восстанавливаем зависимости через NuGet
+
+      # Проверка синтаксиса и форматирования с помощью dotnet-format
+      - name: Check syntax with dotnet format
+        run: |
+          dotnet tool install --global dotnet-format  # Устанавливаем инструмент dotnet-format
+          dotnet format --check  # Проверяем код на соответствие стандартам (без изменений)
